@@ -1,0 +1,3 @@
+const TOKENSECRETS= 'DEVCARLOS'
+
+module.exports= { TOKENSECRETS}
