@@ -26,15 +26,14 @@ const User = sequelize.define(
 
     emailtoken: {
       type: DataTypes.STRING,
-      allowNull: false,
-     
+      allowNull: true, // Temporalmente permitir valores nulos
     },
     
     isVerified: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false // Valor por defecto al crear un usuario
-    },
+      defaultValue: false 
+    }, 
 
     idRol: {
       type: DataTypes.INTEGER,

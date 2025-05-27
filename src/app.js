@@ -10,12 +10,14 @@ const { connectDB } = require("./db");
 const fs = require("fs");
 const path = require("path");
 
+const cors = require("cors");
+
 const app = express();
 
 const swaggerUI = require("swagger-ui-express");
 
 // ✅ Usar `path.resolve` para asegurar la ruta correcta
-const swaggerPath = path.resolve( "src/swagger.json");
+const swaggerPath = path.resolve("src/swagger.json");
 
 let swaggerDocumentation;
 try {
@@ -26,9 +28,15 @@ try {
 }
 
 connectDB();
-app.use(cookieParser());
+
+app.use(cors({
+  origin:'http://localhost:5173',
+  credentials:true
+}))
+
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(cookieParser());
 
 // ✅ Corrección en `swaggerUI.serve`
 app.use("/doc/api", swaggerUI.serve, swaggerUI.setup(swaggerDocumentation));

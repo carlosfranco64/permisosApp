@@ -3,19 +3,18 @@ const bcrypt = require("bcryptjs");
 const { createAccessToken } = require("../libs/jwt");
 const { convertirABase64 } = require("../libs/base64");
 const { transporter } = require("../libs/mailer");
+const jwt = require("jsonwebtoken");
+const { TOKENSECRETS } = require("../config");
 
 const register = async (req, res) => {
   const { name, email, password } = req.body;
-
-  if (!name || !email || !password)
-    return res.status(400).json({ message: "Todos los campos son requeridos" });
 
   const exintingUser = await User.findOne({ where: { email } });
 
   const exintingRole = await Rol.findOne({ where: { name: "User" } });
 
   if (exintingUser)
-    return res.status(400).json({ message: "Esta cuenta ya esta en uso" });
+    return res.status(400).json({ message: ["Esta cuenta ya esta en uso"] });
 
   try {
     const passwordHash = await bcrypt.hash(password, 10);
@@ -98,7 +97,7 @@ const login = async (req, res) => {
 
     const token = await createAccessToken({ id: UserFound.id });
 
-    res.cookie("token", token, { httpOnly: true });
+    res.cookie("token", token);
     res.json({
       name: UserFound.name,
     });
@@ -136,4 +135,27 @@ const profile = async (req, res) => {
   }
 };
 
-module.exports = { register, login, logout, profile };
+const verifyToken = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    jwt.verify(token, TOKENSECRETS, async (err, user) => {
+      if (err) return res.status(401).json({ message: "Unauthorized" });
+      const userFound = await User.findByPk(user.id);
+      if (!userFound) return res.status(401).json({ message: "Unauthorized" });
+
+      return res.json({
+        id: userFound.id,
+        name: userFound.name,
+        email: userFound.email,
+        isVerified: userFound.isVerified,
+      });
+    });
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { register, login, logout, verifyToken, profile };
