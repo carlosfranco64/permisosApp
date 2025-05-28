@@ -34,19 +34,17 @@ const createDefaultRole = async () => {
     const rolUsuario = await Rol.findOne({ where: { name: "User" } });
 
     if (!rolAdmin) {
-      // Si no existe, lo crea con la descripción "acceso a todo"
-      const adminRole = await Rol.create({
-        name: "Admin",
-        description: "Acceso Ilimitado",
-      });
-      const userRole = await Rol.create({
-        name: "User",
-        description: "Acceso Limitado",
-      });
-
-      console.log("Los roles", adminRole, userRole, "han sido creados");
+      await Rol.create({ name: "Admin", description: "Acceso Ilimitado" });
+      console.log("Rol 'Admin' creado.");
     } else {
-      console.log("El rol admin ya existe.");
+      console.log("El rol Admin ya existe.");
+    }
+
+    if (!rolUsuario) {
+      await Rol.create({ name: "User", description: "Acceso Limitado" });
+      console.log("Rol 'User' creado.");
+    } else {
+      console.log("El rol User ya existe.");
     }
   } catch (error) {
     console.error("Error al verificar o crear el rol:", error);
@@ -58,7 +56,7 @@ createDefaultRole();
 const createAdminUser = async () => {
   try {
     // Verifica si el rol 'admin' ya existe
-    const adminRole = await Rol.findOne({ where: { name: "admin" } });
+    const adminRole = await Rol.findOne({ where: { name: "Admin" } });
 
     if (!adminRole) {
       console.log("El rol admin no existe.");
@@ -67,7 +65,7 @@ const createAdminUser = async () => {
 
     // Verifica si ya existe un usuario con el email
     const existingUser = await User.findOne({
-      where: { email: "admin@example.com" },
+      where: { email: "admin@admin.com" },
     });
 
     if (existingUser) {
@@ -76,16 +74,22 @@ const createAdminUser = async () => {
     }
 
     // Encripta el password con bcrypt
-    const plainPassword = "adminPassword123"; // La contraseña que quieres encriptar
+    const plainPassword = process.env.ADMIN_PASSWORD; // La contraseña que quieres encriptar
+    if (!plainPassword) {
+      throw new Error(
+        "La contraseña del administrador no está definida en el archivo .env"
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
     // Crea el usuario con el rol 'admin'
     const newUser = await User.create({
       name: "Administrador",
-      email: "admin@example.com",
+      email: "admin@admin.com",
       password: hashedPassword,
-      emailtoken:null,
-      isVerified:true,  
+      emailtoken: null,
+      isVerified: true,
       idRol: adminRole.id, // Asocia el rol 'admin'
     });
 
@@ -131,6 +135,14 @@ const createMenus = async () => {
 };
 
 // Ejecuta la función para crear los menús
+
 createMenus();
 
-module.exports = { User, Rol, connectDB, createDefaultRole };
+module.exports = {
+  User,
+  Rol,
+  connectDB,
+  createDefaultRole,
+  createAdminUser,
+  createMenus,
+};
