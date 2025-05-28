@@ -29,9 +29,13 @@ try {
 
 connectDB();
 
+// app.use(cors({
+//   origin:'http://localhost:5173',
+//   credentials:true
+// }))
 app.use(cors({
-  origin:'http://localhost:5173',
-  credentials:true
+  origin:'*',
+  credentials:false
 }))
 
 app.use(morgan("dev"));
